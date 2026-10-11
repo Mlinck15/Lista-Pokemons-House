@@ -395,7 +395,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Lista de Pokémons (Um por linha)</label>
-                    <textarea id="autoTextList" rows="5" placeholder="X rocket ball. Cloned Electivire [130][F]Ability: Motor Drive TM: Reflect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500"></textarea>
+                    <textarea id="autoTextList" rows="5" placeholder="purple pokeball.Cloned Pinsir [130][F] &quot;Jelonek Rogacz&quot;Ability: MoxieTM: InfestationTM: Lunge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -714,13 +714,14 @@
         function cleanStringForMatch(text) {
             return text.toLowerCase()
                 .replace(/^x\s+/i, '')
-                .replace(/^(purple pokeball|purple ball|ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '')
+                .replace(/^(purple pokeball|purple ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|ultra ball|great ball|master ball|repeat ball|friend ball)\.?\s*/i, '')
                 .replace(/\[.*?\]/g, '')
+                .replace(/\"/g, '')
                 .replace(/position:.*/i, '')
                 .replace(/ability:.*/i, '')
                 .replace(/items:.*/i, '')
                 .replace(/tm:.*/i, '')
-                .replace(/\{.*?\}/g, '') // remove coordenadas como {x = 3697, y = 3190, z = 5}.
+                .replace(/\{.*?\}/g, '')
                 .replace(/[^a-z0-9]/g, '');
         }
 
@@ -755,6 +756,7 @@
                     const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
                     const cleanKey = cleanStringForMatch(rawName);
                     spriteList.push({
+                        rawName: rawName.toLowerCase(),
                         cleanKey: cleanKey,
                         base64: base64
                     });
@@ -767,17 +769,13 @@
                     line = line.trim();
                     if (!line) continue;
 
-                    let title = line;
-                    let ability = "";
-                    let details = "";
                     let ballName = "POKEBALL";
                     let detectedBallKeys = [];
 
-                    let cleanLine = line.replace(/^([a-z\s]+)\./i, '$1 ');
-                    const lowerLine = cleanLine.toLowerCase();
-
+                    // Etapa 1: Identifica a Pokébola de forma estrita
+                    const lowerLine = line.toLowerCase();
                     if (lowerLine.includes('purple')) { ballName = 'PURPLE BALL'; detectedBallKeys = ['purple']; }
-                    else if (lowerLine.includes('yellow pokeball')) { ballName = 'YELLOW POKEBALL'; detectedBallKeys = ['yellow', 'poke']; }
+                    else if (lowerLine.includes('yellow')) { ballName = 'YELLOW POKEBALL'; detectedBallKeys = ['yellow']; }
                     else if (lowerLine.includes('rocket')) { ballName = 'ROCKET BALL'; detectedBallKeys = ['rocket', 'rock']; }
                     else if (lowerLine.includes('aqua')) { ballName = 'AQUA POKEBALL'; detectedBallKeys = ['aqua']; }
                     else if (lowerLine.includes('moon')) { ballName = 'MOON BALL'; detectedBallKeys = ['moon']; }
@@ -787,24 +785,43 @@
                     else if (lowerLine.includes('great')) { ballName = 'GREAT BALL'; detectedBallKeys = ['great']; }
                     else if (lowerLine.includes('master')) { ballName = 'MASTER BALL'; detectedBallKeys = ['master']; }
                     else if (lowerLine.includes('repeat')) { ballName = 'REPEAT BALL'; detectedBallKeys = ['repeat']; }
+                    else if (lowerLine.includes('friend')) { ballName = 'FRIEND BALL'; detectedBallKeys = ['friend']; }
                     else { ballName = 'POKEBALL'; detectedBallKeys = ['poke', 'normal']; }
 
-                    // Remove prefixos da pokébola no início do título
-                    title = cleanLine.replace(/^(purple pokeball|purple ball|ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '');
+                    // Etapa 2: Remove rigorosamente qualquer prefixo de pokebola do inicio
+                    let title = line.replace(/^(x\s+)?(purple pokeball|purple ball|yellow pokeball|yellow ball|rocket ball|aqua pokeball|aqua ball|moon ball|heavy ball|premier ball|ultra ball|great ball|master ball|repeat ball|friend ball)[\.\s]*/i, '');
 
+                    let ability = "";
+                    let details = "";
+
+                    // Separa Habilidades, TMs e Items
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
                         title = parts[0].trim();
                         const rest = parts[1].trim();
-                        const restParts = rest.split(/TM:|Items:|Position:/i);
-                        ability = "Ability: " + restParts[0].trim();
-                        if (restParts.length > 1) {
-                            details = restParts.slice(1)
-                                .map(tm => tm.replace(/\{.*?\}/g, '').trim()) // remove coordenadas
-                                .filter(tm => tm).join('\n');
+
+                        // Trata TMs agrupados (ex: TM: InfestationTM: Lunge)
+                        let formattedRest = rest.replace(/TM:\s*/g, '\nTM: ')
+                                                .replace(/Items:\s*/g, '\nItems: ')
+                                                .replace(/Position:.*/gi, '');
+
+                        const linesRest = formattedRest.split('\n').map(l => l.trim()).filter(l => l);
+                        
+                        if (linesRest.length > 0) {
+                            ability = "Ability: " + linesRest[0].replace(/^Ability:\s*/i, '');
+                            if (linesRest.length > 1) {
+                                details = linesRest.slice(1)
+                                    .map(l => l.replace(/\{.*?\}/g, '').trim())
+                                    .filter(l => l)
+                                    .join('\n');
+                            }
                         }
                     }
 
+                    // Remove qualquer sobra de coordenadas soltas
+                    details = details.replace(/\{.*?\}/g, '').trim();
+
+                    // Etapa 3: Busca pela foto do Sprite
                     const targetKey = cleanStringForMatch(title);
                     let foundSprite = "";
 
@@ -813,12 +830,12 @@
                         if (!match) {
                             match = spriteList.find(s => s.cleanKey.length >= 3 && (targetKey.includes(s.cleanKey) || s.cleanKey.includes(targetKey)));
                         }
-
                         if (match) {
                             foundSprite = match.base64;
                         }
                     }
 
+                    // Busca pela foto da Pokébola
                     let foundBall = "";
                     for (let bKey of detectedBallKeys) {
                         for (let key in ballMap) {
