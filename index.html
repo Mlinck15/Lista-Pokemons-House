@@ -443,7 +443,7 @@
             
             if(!grid) return;
             grid.innerHTML = '';
-            let total = 0, cloned = 0, shiny = 0, normal = 0;
+            let total = 0, cloned = 0, shiny = 0, raros = 0;
             let displayedCount = 0;
 
             Object.keys(window.currentData).forEach(cat => {
@@ -451,7 +451,7 @@
                 total += count;
                 if (cat === 'Cloneds') cloned += count;
                 if (cat === 'Shiny') shiny += count;
-                if (cat === 'Raros') Raros += count;
+                if (cat === 'Raros') raros += count;
 
                 if (window.currentCategory !== 'all' && window.currentCategory !== cat) return;
 
@@ -520,7 +520,7 @@
             if(statTotal) statTotal.innerText = total;
             if(statCloned) statCloned.innerText = cloned;
             if(statShiny) statShiny.innerText = shiny;
-            if(statNormal) statNormal.innerText = normal;
+            if(statNormal) statNormal.innerText = raros;
 
             if (displayedCount === 0) {
                 if(emptyState) {
@@ -742,7 +742,6 @@
             }
 
             try {
-                // Prepara lista de Pokébolas enviadas nas fotos
                 const ballList = [];
                 for (let file of ballFiles) {
                     const base64 = await toBase64(file);
@@ -755,7 +754,6 @@
                     });
                 }
 
-                // Prepara lista de Sprites de Pokémons enviados nas fotos
                 const spriteList = [];
                 for (let file of spriteFiles) {
                     const base64 = await toBase64(file);
@@ -779,14 +777,10 @@
                     let foundBall = "";
                     let title = line;
 
-                    // Procura onde o nome do Pokémon começa (Cloned, Shiny, ou nome comum)
                     const pokeNameMatch = line.match(/(Cloned|Shiny|[A-Z][a-z]+)\s+/i);
                     
                     if (pokeNameMatch && pokeNameMatch.index > 0) {
-                        // Extrai todo o texto da Pokébola antes do nome do Pokémon (ex: "friend ball." de "friend ball.Cloned Parasect")
                         let extractedBallText = line.substring(0, pokeNameMatch.index).trim();
-                        
-                        // Limpa o prefixo 'x ' e pontos do final
                         extractedBallText = extractedBallText.replace(/^x\s+/i, '').replace(/[\.\s]+$/, '');
 
                         if (extractedBallText) {
@@ -794,10 +788,8 @@
                             if (!displayBall.includes('BALL')) displayBall += ' BALL';
                             ballName = displayBall;
 
-                            // Atualiza o título para começar a partir do Pokémon
                             title = line.substring(pokeNameMatch.index).trim();
 
-                            // Normaliza a string da bola para bater com o arquivo (ex: "friend ball" -> "friendball")
                             const cleanExtracted = extractedBallText.toLowerCase().replace(/[^a-z0-9]/g, '');
                             const firstWord = cleanExtracted.replace(/ball|pokeball/g, '');
 
@@ -815,7 +807,6 @@
                     let ability = "";
                     let details = "";
 
-                    // Separa Habilidades, TMs e Items
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
                         title = parts[0].trim();
@@ -840,7 +831,6 @@
 
                     details = details.replace(/\{.*?\}/g, '').trim();
 
-                    // Procura o Sprite do Pokémon
                     const targetKey = cleanStringForMatch(title);
                     let foundSprite = "";
 
