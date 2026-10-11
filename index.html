@@ -447,7 +447,7 @@
             let displayedCount = 0;
 
             Object.keys(window.currentData).forEach(cat => {
-                const count = window.currentData[cat].length;
+                const count = (window.currentData[cat] || []).length;
                 total += count;
                 if (cat === 'Cloneds') cloned += count;
                 if (cat === 'Shiny') shiny += count;
@@ -455,7 +455,7 @@
 
                 if (window.currentCategory !== 'all' && window.currentCategory !== cat) return;
 
-                window.currentData[cat].forEach((pokemonObj, index) => {
+                (window.currentData[cat] || []).forEach((pokemonObj, index) => {
                     const title = pokemonObj.title || "";
                     const ability = pokemonObj.ability || "";
                     const details = pokemonObj.details || "";
