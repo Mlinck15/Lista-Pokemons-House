@@ -112,7 +112,7 @@
                     await batch.commit();
                 }
 
-                alert(`Sucesso! ${totalSaved} Pokémons gravados no novo banco de dados.`);
+                alert(`Sucesso! ${totalSaved} Pokémons gravados na nuvem.`);
             } catch (error) {
                 console.error("Erro na importação: ", error);
                 alert("Erro ao gravar no Firebase: " + error.message);
@@ -283,7 +283,7 @@
                 <i class="fa-solid fa-ghost"></i>
             </div>
             <h3 class="text-lg font-bold text-white">Nenhum Pokémon encontrado</h3>
-            <p class="text-sm text-slate-400 mt-1">Clique em "Importar" para enviar seu arquivo TradePokesOficial.json para a nova nuvem.</p>
+            <p class="text-sm text-slate-400 mt-1">Clique em "Importar" para enviar seu arquivo para a nuvem.</p>
         </div>
 
     </main>
@@ -771,25 +771,42 @@
                     else if (lowerLine.includes('repeat')) { ballName = 'REPEAT BALL'; detectedBallKeys = ['repeat']; }
                     else { ballName = 'POKEBALL'; detectedBallKeys = ['poke', 'normal']; }
 
-                    title = cleanLine.replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball)\.?\s*/i, '');
+                    title = cleanLine.replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '');
 
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
                         title = parts[0].trim();
                         const rest = parts[1].trim();
-                        const restParts = rest.split(/TM:|Items:/i);
+                        const restParts = rest.split(/TM:|Items:|Position:/i);
                         ability = "Ability: " + restParts[0].trim();
                         if (restParts.length > 1) {
-                            details = restParts.slice(1).map(tm => "TM: " + tm.trim()).join('\n');
+                            details = restParts.slice(1).map(tm => tm.trim()).filter(tm => tm).join('\n');
                         }
                     }
 
+                    // Limpa o nome do Pokémon para buscar a imagem exata (remove 'cloned', 'shiny', níveis e gêneros)
+                    let searchKeyPoke = title.toLowerCase()
+                        .replace(/^(cloned|shiny|friend ball)\s+/g, '')
+                        .replace(/\[.*?\]/g, '')
+                        .replace(/[^a-z0-9]/g, '');
+
                     let foundSprite = "";
-                    const searchKeyPoke = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    // 1. Tenta correspondência exata do nome do Pokémon
                     for (let key in spriteMap) {
-                        if (searchKeyPoke.includes(key) || (key.length >= 4 && searchKeyPoke.includes(key.substring(0, 5)))) {
+                        if (key === searchKeyPoke) {
                             foundSprite = spriteMap[key];
                             break;
+                        }
+                    }
+
+                    // 2. Se não achar exato, procura se a chave da imagem está contida inteira no nome limpo
+                    if (!foundSprite) {
+                        for (let key in spriteMap) {
+                            if (key.length >= 3 && searchKeyPoke.includes(key)) {
+                                foundSprite = spriteMap[key];
+                                break;
+                            }
                         }
                     }
 
