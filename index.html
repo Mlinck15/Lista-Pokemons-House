@@ -711,17 +711,17 @@
             });
         }
 
-        // Função de limpeza simplificada: limpa apenas colchetes, parênteses, posições e pontuação
         function cleanStringForMatch(text) {
             return text.toLowerCase()
                 .replace(/^x\s+/i, '')
-                .replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '')
-                .replace(/\[.*?\]/g, '') // remove [130], [F], [M]
+                .replace(/^(purple pokeball|purple ball|ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '')
+                .replace(/\[.*?\]/g, '')
                 .replace(/position:.*/i, '')
                 .replace(/ability:.*/i, '')
                 .replace(/items:.*/i, '')
                 .replace(/tm:.*/i, '')
-                .replace(/[^a-z0-9]/g, ''); // mantém apenas letras e números (ex: 'clonedkingler')
+                .replace(/\{.*?\}/g, '') // remove coordenadas como {x = 3697, y = 3190, z = 5}.
+                .replace(/[^a-z0-9]/g, '');
         }
 
         window.processBatchImport = async function() {
@@ -749,7 +749,6 @@
                     ballMap[cleanName] = base64;
                 }
 
-                // Mapeia todas as imagens de Pokémons carregadas
                 const spriteList = [];
                 for (let file of spriteFiles) {
                     const base64 = await toBase64(file);
@@ -777,7 +776,8 @@
                     let cleanLine = line.replace(/^([a-z\s]+)\./i, '$1 ');
                     const lowerLine = cleanLine.toLowerCase();
 
-                    if (lowerLine.includes('yellow pokeball')) { ballName = 'YELLOW POKEBALL'; detectedBallKeys = ['yellow', 'poke']; }
+                    if (lowerLine.includes('purple')) { ballName = 'PURPLE BALL'; detectedBallKeys = ['purple']; }
+                    else if (lowerLine.includes('yellow pokeball')) { ballName = 'YELLOW POKEBALL'; detectedBallKeys = ['yellow', 'poke']; }
                     else if (lowerLine.includes('rocket')) { ballName = 'ROCKET BALL'; detectedBallKeys = ['rocket', 'rock']; }
                     else if (lowerLine.includes('aqua')) { ballName = 'AQUA POKEBALL'; detectedBallKeys = ['aqua']; }
                     else if (lowerLine.includes('moon')) { ballName = 'MOON BALL'; detectedBallKeys = ['moon']; }
@@ -789,7 +789,8 @@
                     else if (lowerLine.includes('repeat')) { ballName = 'REPEAT BALL'; detectedBallKeys = ['repeat']; }
                     else { ballName = 'POKEBALL'; detectedBallKeys = ['poke', 'normal']; }
 
-                    title = cleanLine.replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '');
+                    // Remove prefixos da pokébola no início do título
+                    title = cleanLine.replace(/^(purple pokeball|purple ball|ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '');
 
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
@@ -798,19 +799,17 @@
                         const restParts = rest.split(/TM:|Items:|Position:/i);
                         ability = "Ability: " + restParts[0].trim();
                         if (restParts.length > 1) {
-                            details = restParts.slice(1).map(tm => tm.trim()).filter(tm => tm).join('\n');
+                            details = restParts.slice(1)
+                                .map(tm => tm.replace(/\{.*?\}/g, '').trim()) // remove coordenadas
+                                .filter(tm => tm).join('\n');
                         }
                     }
 
-                    // Extrai a chave limpa do Pokémon a importar (ex: 'clonedkingler')
                     const targetKey = cleanStringForMatch(title);
                     let foundSprite = "";
 
                     if (targetKey.length > 0) {
-                        // 1. Tenta correspondência exata
                         let match = spriteList.find(s => s.cleanKey === targetKey);
-                        
-                        // 2. Se não achar exato, verifica se a chave da imagem está contida no texto ou vice-versa
                         if (!match) {
                             match = spriteList.find(s => s.cleanKey.length >= 3 && (targetKey.includes(s.cleanKey) || s.cleanKey.includes(targetKey)));
                         }
