@@ -58,17 +58,17 @@
         window.currentData = {
             "Cloneds": [],
             "Shiny": [],
-            "Normais": []
+            "Raros": []
         };
         window.currentCategory = 'all';
 
         function listenToFirebase() {
             onSnapshot(collection(db, COLLECTION_NAME), (snapshot) => {
-                const newData = { "Cloneds": [], "Shiny": [], "Normais": [] };
+                const newData = { "Cloneds": [], "Shiny": [], "Raros": [] };
                 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const cat = data.category || "Normais";
+                    const cat = data.category || "Raros";
                     if (!newData[cat]) newData[cat] = [];
                     newData[cat].push({
                         id: docSnap.id,
@@ -93,7 +93,7 @@
 
                 for (let i = 0; i < itemsArray.length; i++) {
                     const p = itemsArray[i];
-                    const cat = p.category || "Normais";
+                    const cat = p.category || "Raros";
                     const docId = p.id || `${cat}_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 4)}`;
                     const ref = doc(db, COLLECTION_NAME, docId);
                     
@@ -240,7 +240,7 @@
             </div>
             <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Normais</p>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Raros</p>
                     <h3 id="statNormal" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
@@ -261,8 +261,8 @@
                 <button onclick="setCategory('Shiny')" id="btn-cat-Shiny" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
                     Shiny
                 </button>
-                <button onclick="setCategory('Normais')" id="btn-cat-Normais" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
-                    Normais
+                <button onclick="setCategory('Raros')" id="btn-cat-Raros" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
+                    Raros
                 </button>
             </div>
 
@@ -326,7 +326,7 @@
                         <select id="pokeCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
                             <option value="Cloneds">Cloneds</option>
                             <option value="Shiny">Shiny</option>
-                            <option value="Normais">Normais</option>
+                            <option value="Raros">Raros</option>
                         </select>
                     </div>
                     <div>
@@ -389,7 +389,7 @@
                     <select id="autoCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                         <option value="Cloneds">Cloneds</option>
                         <option value="Shiny">Shiny</option>
-                        <option value="Normais">Normais</option>
+                        <option value="Raros">Raros</option>
                     </select>
                 </div>
 
@@ -451,7 +451,7 @@
                 total += count;
                 if (cat === 'Cloneds') cloned += count;
                 if (cat === 'Shiny') shiny += count;
-                if (cat === 'Normais') normal += count;
+                if (cat === 'Raros') Raros += count;
 
                 if (window.currentCategory !== 'all' && window.currentCategory !== cat) return;
 
