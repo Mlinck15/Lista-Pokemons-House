@@ -714,7 +714,6 @@
         function cleanStringForMatch(text) {
             return text.toLowerCase()
                 .replace(/^x\s+/i, '')
-                .replace(/^.*?ball[\.\s]*/i, '') // Remove dinamicamente qualquer prefixo de pokebola do inicio
                 .replace(/\[.*?\]/g, '')
                 .replace(/\"/g, '')
                 .replace(/position:.*/i, '')
@@ -743,7 +742,7 @@
             }
 
             try {
-                // Lista de ficheiros de pokébolas carregadas
+                // Prepara lista de imagens de Pokébolas
                 const ballList = [];
                 for (let file of ballFiles) {
                     const base64 = await toBase64(file);
@@ -756,7 +755,7 @@
                     });
                 }
 
-                // Lista de ficheiros de sprites carregados
+                // Prepara lista de imagens de Pokémons
                 const spriteList = [];
                 for (let file of spriteFiles) {
                     const base64 = await toBase64(file);
@@ -780,25 +779,29 @@
                     let foundBall = "";
                     let title = line;
 
-                    // Captura o prefixo da pokébola no início da linha (ex: 'friend ball.', 'purple pokeball.', etc.)
-                    const ballMatch = line.match(/^(x\s+)?([a-z0-9\s]+?(ball|pokeball))[\.\s]*/i);
+                    // Procura o prefixo da Pokébola no início (ex: "friend ball.Cloned...", "purple pokeball.Cloned...")
+                    const ballMatch = line.match(/^((x\s+)?[a-z0-9\s]+?(ball|pokeball))[\.\s]*/i);
                     
-                    if (ballMatch && ballMatch[2]) {
-                        const extractedBallText = ballMatch[2].trim();
+                    if (ballMatch && ballMatch[1]) {
+                        let extractedText = ballMatch[1].replace(/^x\s+/i, '').trim();
                         
-                        // Garante que o sufixo BALL fica limpo para apresentação
-                        let cleanBallDisplay = extractedBallText.toUpperCase().replace('POKEBALL', 'BALL');
-                        if (!cleanBallDisplay.includes('BALL')) cleanBallDisplay += ' BALL';
-                        ballName = cleanBallDisplay;
+                        // Define o nome de exibição (ex: FRIEND BALL, PURPLE BALL)
+                        let displayBall = extractedText.toUpperCase().replace('POKEBALL', 'BALL');
+                        if (!displayBall.includes('BALL')) displayBall += ' BALL';
+                        ballName = displayBall;
 
-                        // Remove a pokébola do início do título
+                        // Remove a bola do título do Pokémon
                         title = line.substring(ballMatch[0].length).trim();
 
-                        // Procura a foto da bola pelo nome limpo extraído
-                        const cleanExtractedKey = extractedBallText.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        const firstWordKey = cleanExtractedKey.replace(/ball|pokeball/g, '');
+                        // Procura a imagem correspondente no lote de pokébolas
+                        const cleanExtracted = extractedText.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const firstWord = cleanExtracted.replace(/ball|pokeball/g, '');
 
-                        let matchBall = ballList.find(b => b.cleanName === cleanExtractedKey || (firstWordKey.length >= 3 && b.cleanName.includes(firstWordKey)));
+                        let matchBall = ballList.find(b => b.cleanName === cleanExtracted);
+                        if (!matchBall && firstWord.length >= 3) {
+                            matchBall = ballList.find(b => b.cleanName.includes(firstWord));
+                        }
+
                         if (matchBall) {
                             foundBall = matchBall.base64;
                         }
@@ -807,7 +810,7 @@
                     let ability = "";
                     let details = "";
 
-                    // Separa Habilidades, TMs e Items
+                    // Separa a Habilidade e TMs do restante do texto
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
                         title = parts[0].trim();
@@ -830,10 +833,10 @@
                         }
                     }
 
-                    // Remove sobra de coordenadas soltas
+                    // Limpa coordenadas sobrantes
                     details = details.replace(/\{.*?\}/g, '').trim();
 
-                    // Procura pela foto do Sprite do Pokémon
+                    // Procura pela imagem do Sprite do Pokémon
                     const targetKey = cleanStringForMatch(title);
                     let foundSprite = "";
 
