@@ -12,9 +12,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // ==========================================
-        // SEU NOVO PROJETO FIREBASE (POKEMONS-HOUSE)
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyC2d-OT4XIyLG1O48gMexds4n5-MzvjAgE",
             authDomain: "pokemons-house.firebaseapp.com",
@@ -24,9 +21,39 @@
             appId: "1:249877855012:web:e34e3b0c304b06b52fd1b1"
         };
 
-        // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        const COLLECTION_NAME = "TradePokesOficial";
+        const ADMIN_PASSWORD = "Shared@2026";
+
+        let pendingAction = null;
+
+        window.requestAdminAuth = function(actionCallback) {
+            pendingAction = actionCallback;
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        window.closeAuthModal = function() {
+            pendingAction = null;
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        window.confirmAdminAuth = function() {
+            const enteredPassword = document.getElementById('adminPasswordInput').value;
+            if (enteredPassword === ADMIN_PASSWORD) {
+                document.getElementById('authModal').classList.add('hidden');
+                if (pendingAction) {
+                    const action = pendingAction;
+                    pendingAction = null;
+                    action();
+                }
+            } else {
+                alert("Senha incorreta!");
+                document.getElementById('adminPasswordInput').value = '';
+            }
+        }
 
         window.currentData = {
             "Cloneds": [],
@@ -35,9 +62,8 @@
         };
         window.currentCategory = 'all';
 
-        // Escuta as alterações na nuvem em tempo real
         function listenToFirebase() {
-            onSnapshot(collection(db, "pokemons_v2"), (snapshot) => {
+            onSnapshot(collection(db, COLLECTION_NAME), (snapshot) => {
                 const newData = { "Cloneds": [], "Shiny": [], "Normais": [] };
                 
                 snapshot.forEach((docSnap) => {
@@ -51,17 +77,52 @@
                 });
 
                 window.currentData = newData;
-                if (window.renderList) window.renderList();
+                if (typeof window.renderList === 'function') {
+                    window.renderList();
+                }
             }, (error) => {
-                console.error("Erro ao sincronizar com o Firebase: ", error);
+                console.error("Erro no Firebase: ", error);
             });
         }
 
-        // Função para gravar/atualizar um pokémon individualmente na nuvem
+        window.importBatchToFirebase = async function(itemsArray) {
+            try {
+                let batch = writeBatch(db);
+                let count = 0;
+                let totalSaved = 0;
+
+                for (let i = 0; i < itemsArray.length; i++) {
+                    const p = itemsArray[i];
+                    const cat = p.category || "Normais";
+                    const docId = p.id || `${cat}_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 4)}`;
+                    const ref = doc(db, COLLECTION_NAME, docId);
+                    
+                    batch.set(ref, { ...p, category: cat, id: docId });
+                    count++;
+                    totalSaved++;
+
+                    if (count === 100) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        count = 0;
+                    }
+                }
+
+                if (count > 0) {
+                    await batch.commit();
+                }
+
+                alert(`Sucesso! ${totalSaved} Pokémons gravados no novo banco de dados.`);
+            } catch (error) {
+                console.error("Erro na importação: ", error);
+                alert("Erro ao gravar no Firebase: " + error.message);
+            }
+        };
+
         window.saveSinglePokemonToFirebase = async function(category, pokemonObj) {
             try {
                 const docId = pokemonObj.id || `${category}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-                const ref = doc(db, "pokemons_v2", docId);
+                const ref = doc(db, COLLECTION_NAME, docId);
                 const dataToSave = { ...pokemonObj, category: category, id: docId };
                 await setDoc(ref, dataToSave);
             } catch (error) {
@@ -70,51 +131,22 @@
             }
         };
 
-        // Função para apagar um pokémon da nuvem
         window.deletePokemonFromFirebase = async function(category, index) {
             try {
                 const item = window.currentData[category][index];
                 if (item && item.id) {
-                    await deleteDoc(doc(db, "pokemons_v2", item.id));
+                    await deleteDoc(doc(db, COLLECTION_NAME, item.id));
+                    alert("Pokémon excluído com sucesso!");
                 }
             } catch (error) {
                 console.error("Erro ao excluir do Firebase: ", error);
+                alert("Erro ao excluir: " + error.message);
             }
         };
 
-        // Importação em Lote Otimizada para o Firebase
-        window.importBatchToFirebase = async function(itemsArray) {
-            try {
-                let batch = writeBatch(db);
-                let count = 0;
-
-                for (let p of itemsArray) {
-                    const cat = p.category || "Normais";
-                    const docId = p.id || `${cat}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-                    const ref = doc(db, "pokemons_v2", docId);
-                    
-                    batch.set(ref, { ...p, category: cat, id: docId });
-                    count++;
-
-                    if (count % 400 === 0) {
-                        await batch.commit();
-                        batch = writeBatch(db);
-                    }
-                }
-                if (count % 400 !== 0) {
-                    await batch.commit();
-                }
-                alert(`${count} Pokémons importados para a nuvem com sucesso!`);
-            } catch (error) {
-                console.error("Erro na importação em massa: ", error);
-                alert("Erro ao importar para a nuvem: " + error.message);
-            }
-        };
-
-        // Limpa toda a base de dados da nuvem
         window.clearFirebaseData = async function() {
             try {
-                const snapshot = await getDocs(collection(db, "pokemons_v2"));
+                const snapshot = await getDocs(collection(db, COLLECTION_NAME));
                 let batch = writeBatch(db);
                 let count = 0;
                 snapshot.forEach((docSnap) => {
@@ -122,6 +154,7 @@
                     count++;
                 });
                 if (count > 0) await batch.commit();
+                alert("Base de dados limpa com sucesso!");
             } catch (error) {
                 console.error("Erro ao limpar nuvem: ", error);
             }
@@ -153,20 +186,20 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <button onclick="openAutoModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer" title="Cadastro e Vínculo em Massa por Imagens">
+                <button onclick="requestAdminAuth(() => openAutoModal())" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Importação Automática
                 </button>
-                <button onclick="openAddModal()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer">
+                <button onclick="requestAdminAuth(() => openAddModal())" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Novo Pokémon
                 </button>
-                <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer" title="Exportar JSON">
+                <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer">
                     <i class="fa-solid fa-download"></i> Exportar
                 </button>
-                <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer" title="Importar JSON">
+                <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer">
                     <i class="fa-solid fa-upload"></i> Importar
-                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                    <input type="file" id="importFile" accept=".json" onchange="requestAdminAuth(() => importData(event))" class="hidden">
                 </label>
-                <button onclick="resetToDefault()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-rose-900/50 cursor-pointer" title="Limpar Nuvem">
+                <button onclick="requestAdminAuth(() => resetToDefault())" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-rose-900/50 cursor-pointer" title="Limpar Nuvem">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
@@ -250,10 +283,29 @@
                 <i class="fa-solid fa-ghost"></i>
             </div>
             <h3 class="text-lg font-bold text-white">Nenhum Pokémon encontrado</h3>
-            <p class="text-sm text-slate-400 mt-1">Tente importar sua base JSON para a nuvem.</p>
+            <p class="text-sm text-slate-400 mt-1">Clique em "Importar" para enviar seu arquivo TradePokesOficial.json para a nova nuvem.</p>
         </div>
 
     </main>
+
+    <!-- Modal de Autenticação / Senha Segura -->
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-rose-500">
+                <i class="fa-solid fa-lock text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Acesso Restrito</h3>
+            </div>
+            <p class="text-xs text-slate-300">Esta ação requer a senha de administrador para continuar.</p>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Palavra-passe</label>
+                <input type="password" id="adminPasswordInput" placeholder="Digite a senha..." onkeydown="if(event.key === 'Enter') confirmAdminAuth()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+            </div>
+            <div class="flex justify-end gap-2 mt-2">
+                <button type="button" onclick="closeAuthModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-medium transition cursor-pointer">Cancelar</button>
+                <button type="button" onclick="confirmAdminAuth()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-xs font-medium transition shadow-lg shadow-rose-600/20 cursor-pointer">Confirmar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal de Cadastro / Edição Individual -->
     <div id="pokemonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -448,10 +500,10 @@
                         </div>
                         
                         <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80">
-                            <button onclick="openEditModal('${cat}', ${index})" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-slate-700 cursor-pointer">
+                            <button onclick="requestAdminAuth(() => openEditModal('${cat}', ${index}))" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-slate-700 cursor-pointer">
                                 <i class="fa-solid fa-pen-to-square"></i> Editar
                             </button>
-                            <button onclick="deletePokemon('${cat}', ${index})" class="flex-1 bg-rose-950/30 hover:bg-rose-900/50 text-rose-400 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-rose-900/40 cursor-pointer">
+                            <button onclick="requestAdminAuth(() => deletePokemon('${cat}', ${index}))" class="flex-1 bg-rose-950/30 hover:bg-rose-900/50 text-rose-400 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-rose-900/40 cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i> Vender/Excluir
                             </button>
                         </div>
@@ -595,16 +647,14 @@
         }
 
         window.deletePokemon = async function(category, index) {
-            if (confirm("Deseja realmente vender/excluir este registro?")) {
-                await deletePokemonFromFirebase(category, index);
-            }
+            await deletePokemonFromFirebase(category, index);
         }
 
         window.exportData = function() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.currentData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "pokemons.json");
+            downloadAnchor.setAttribute("download", "TradePokesOficial.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -618,8 +668,10 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed && typeof parsed === 'object') {
-                        if (confirm("Deseja importar estes Pokémons para a nuvem?")) {
-                            let flatArray = [];
+                        let flatArray = [];
+                        if (Array.isArray(parsed)) {
+                            flatArray = parsed;
+                        } else {
                             for(let cat of Object.keys(parsed)) {
                                 if(Array.isArray(parsed[cat])) {
                                     parsed[cat].forEach(item => {
@@ -627,13 +679,19 @@
                                     });
                                 }
                             }
-                            await importBatchToFirebase(flatArray);
                         }
+
+                        if (flatArray.length === 0) {
+                            alert("Nenhum registro válido encontrado.");
+                            return;
+                        }
+
+                        await importBatchToFirebase(flatArray);
                     } else {
                         alert("Arquivo JSON inválido.");
                     }
                 } catch (err) {
-                    alert("Erro ao ler o arquivo JSON.");
+                    alert("Erro ao ler o arquivo JSON: " + err.message);
                 }
             };
             reader.readAsText(file);
@@ -641,10 +699,7 @@
         }
 
         window.resetToDefault = async function() {
-            if (confirm("Deseja limpar todos os Pokémons salvos na nuvem?")) {
-                await clearFirebaseData();
-                alert("Nuvem limpa!");
-            }
+            await clearFirebaseData();
         }
 
         window.toBase64 = function(file) {
