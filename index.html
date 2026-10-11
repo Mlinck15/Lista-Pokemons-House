@@ -711,6 +711,20 @@
             });
         }
 
+        // Função de utilidade para extrair o nome exato da espécie (ex: 'kingler', 'farfetchd', 'ninetales')
+        function extractSpeciesName(text) {
+            let clean = text.toLowerCase()
+                .replace(/^x\s+/i, '')
+                .replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '')
+                .replace(/\[.*?\]/g, '') // remove [130], [F], [M]
+                .replace(/position:.*/i, '') // remove coordenadas Position: {x...}
+                .replace(/ability:.*/i, '')
+                .replace(/tm:.*/i, '')
+                .replace(/^(cloned|clone|shiny)\s+/i, '')
+                .replace(/[^a-z0-9]/g, '');
+            return clean.trim();
+        }
+
         window.processBatchImport = async function() {
             const category = document.getElementById('autoCategory').value;
             const rawText = document.getElementById('autoTextList').value.trim();
@@ -736,11 +750,17 @@
                     ballMap[cleanName] = base64;
                 }
 
-                const spriteMap = {};
+                // Mapeia todas as imagens de Pokémons carregadas
+                const spriteList = [];
                 for (let file of spriteFiles) {
                     const base64 = await toBase64(file);
-                    const cleanName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase().replace(/[^a-z0-9]/g, '');
-                    spriteMap[cleanName] = base64;
+                    const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
+                    const cleanSpecies = extractSpeciesName(rawName);
+                    spriteList.push({
+                        rawName: rawName.toLowerCase(),
+                        cleanSpecies: cleanSpecies,
+                        base64: base64
+                    });
                 }
 
                 const lines = rawText.split('\n');
@@ -784,28 +804,20 @@
                         }
                     }
 
-                    // Limpa o nome do Pokémon para buscar a imagem exata (remove 'cloned', 'shiny', níveis e gêneros)
-                    let searchKeyPoke = title.toLowerCase()
-                        .replace(/^(cloned|shiny|friend ball)\s+/g, '')
-                        .replace(/\[.*?\]/g, '')
-                        .replace(/[^a-z0-9]/g, '');
-
+                    // Extrai a espécie do título (ex: 'kingler', 'farfetchd', 'ninetales')
+                    const targetSpecies = extractSpeciesName(title);
                     let foundSprite = "";
-                    
-                    // 1. Tenta correspondência exata do nome do Pokémon
-                    for (let key in spriteMap) {
-                        if (key === searchKeyPoke) {
-                            foundSprite = spriteMap[key];
-                            break;
-                        }
-                    }
 
-                    // 2. Se não achar exato, procura se a chave da imagem está contida inteira no nome limpo
-                    if (!foundSprite) {
-                        for (let key in spriteMap) {
-                            if (key.length >= 3 && searchKeyPoke.includes(key)) {
-                                foundSprite = spriteMap[key];
-                                break;
+                    if (targetSpecies.length > 0) {
+                        // 1. Tenta correspondência exata de espécie
+                        let match = spriteList.find(s => s.cleanSpecies === targetSpecies);
+                        if (match) {
+                            foundSprite = match.base64;
+                        } else {
+                            // 2. Tenta encontrar se o nome limpo da imagem está contido dentro do título
+                            match = spriteList.find(s => s.cleanSpecies.length >= 3 && targetSpecies.includes(s.cleanSpecies));
+                            if (match) {
+                                foundSprite = match.base64;
                             }
                         }
                     }
