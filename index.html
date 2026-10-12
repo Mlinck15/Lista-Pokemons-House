@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista Oficial Pokemons House</title>
+    <title>Padventures - Pokemons Para Venda</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -58,17 +58,17 @@
         window.currentData = {
             "Cloneds": [],
             "Shiny": [],
-            "Raros": []
+            "Normais": []
         };
         window.currentCategory = 'all';
 
         function listenToFirebase() {
             onSnapshot(collection(db, COLLECTION_NAME), (snapshot) => {
-                const newData = { "Cloneds": [], "Shiny": [], "Raros": [] };
+                const newData = { "Cloneds": [], "Shiny": [], "Normais": [] };
                 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const cat = data.category || "Raros";
+                    const cat = data.category || "Normais";
                     if (!newData[cat]) newData[cat] = [];
                     newData[cat].push({
                         id: docSnap.id,
@@ -93,7 +93,7 @@
 
                 for (let i = 0; i < itemsArray.length; i++) {
                     const p = itemsArray[i];
-                    const cat = p.category || "Raros";
+                    const cat = p.category || "Normais";
                     const docId = p.id || `${cat}_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 4)}`;
                     const ref = doc(db, COLLECTION_NAME, docId);
                     
@@ -172,74 +172,34 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-rose-500 selection:text-white">
 
-    <!-- Header Perfeitamente Alinhado -->
+    <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
-        <div class="max-w-[1500px] mx-auto px-4 py-3 flex flex-wrap xl:flex-nowrap justify-between items-center gap-4">
-            
-            <!-- Esquerda: Título + Treinadores com Imagens Exatas -->
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/20 text-white shrink-0">
-                        <i class="fa-solid fa-baseball text-lg"></i>
-                    </div>
-                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent whitespace-nowrap">
-                        Lista Oficial Pokemons House
-                    </h1>
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/20 text-white">
+                    <i class="fa-solid fa-baseball text-xl"></i>
                 </div>
-
-                <!-- Treinadores (Imagens Base64 Embutidas dos ficheiros enviados) -->
-                <div class="flex items-center gap-2 border-l border-slate-800 pl-4">
-                    <!-- Dragon Pink -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGbElEQVR4nO2bXWxT1xXHf2u7jZuQ2Ea2mDbtYm2BtmhpmhJsm7ZNG512lW3btoW2bds+tNqmqdp1l4Vp07Rt2m3V1G23aZNtG9Jq2ySNtdrW6jSpTds0aVPZpvjA+8Z559535zzv3pQnF8eOkyb64/zH7j33nu\/vnfud+yqA3m0XwL8LYL8LoH8K\/KcA+qfAPwNf3zKAb0dCgCvhGjABAP0VwP5mXAEALt6U4eW70jI9rAAAPoBzwx8B3xV/fWjAC+Af+H9gAAh847Hw/9E4n7iN06fA286g1r19WkZf4y4DAPg856x\/D4A3L/hT4P5nAMBy3a2588s9nB39d+Bvv53x5+4jAOXmX\/19AOD3f4X+vwEAPtA5+u\/vAQCgM8pDkK5n23lO5m\/4GgBw/a5v8H7yP2X8k/hD\/\/570f8JAPD1P\/0z8P29CUAAMABgAAxAYIQAADgTfV8EAAAMAgL7jL617W0086vXnO6cAgA\/\/3Q2a\/93P7hC4JmUAYD7W9xHAPiM84C8P92u\/Q8AYO1UeFz4l1L1N0UAPt098H1xAAAW74X\/N0Pz+qO1\/v4cAP6t0H5vAACf1u4DAPoHAACgYt8qAAAAAElFTkSuQmCC" alt="Dragon Pink" class="w-8 h-8 object-contain pokemon-sprite">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-emerald-400 leading-none">Dragon Pink</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-baseball text-[7px] text-orange-400"></i> Trainer
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Doomsday -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGbElEQVR4nO2bXWxT1xXHf2u7jZuQ2Ea2mDbtYm2BtmhpmhJsm7ZNG512lW3btoW2bds+tNqmqdp1l4Vp07Rt2m3V1G23aZNtG9Jq2ySNtdrW6jSpTds0aVPZpvjA+8Z559535zzv3pQnF8eOkyb64/zH7j33nu\/vnfud+yqA3m0XwL8LYL8LoH8K\/KcA+qfAPwNf3zKAb0dCgCvhGjABAP0VwP5mXAEALt6U4eW70jI9rAAAPoBzwx8B3xV/fWjAC+Af+H9gAAh847Hw/9E4n7iN06fA286g1r19WkZf4y4DAPg856x\/D4A3L/hT4P5nAMBy3a2588s9nB39d+Bvv53x5+4jAOXmX\/19AOD3f4X+vwEAPtA5+u\/vAQCgM8pDkK5n23lO5m\/4GgBw/a5v8H7yP2X8k/hD\/\/570f8JAPD1P\/0z8P29CUAAMABgAAxAYIQAADgTfV8EAAAMAgL7jL617W0086vXnO6cAgA\/\/3Q2a\/93P7hC4JmUAYD7W9xHAPiM84C8P92u\/Q8AYO1UeFz4l1L1N0UAPt098H1xAAAW74X\/N0Pz+qO1\/v4cAP6t0H5vAACf1u4DAPoHAACgYt8qAAAAAElFTkSuQmCC" alt="Doomsday" class="w-8 h-8 object-contain pokemon-sprite">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-rose-500 leading-none">Doomsday</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-baseball text-[7px] text-orange-400"></i> Trainer
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Toure Diamond -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGbElEQVR4nO2bXWxT1xXHf2u7jZuQ2Ea2mDbtYm2BtmhpmhJsm7ZNG512lW3btoW2bds+tNqmqdp1l4Vp07Rt2m3V1G23aZNtG9Jq2ySNtdrW6jSpTds0aVPZpvjA+8Z559535zzv3pQnF8eOkyb64/zH7j33nu\/vnfud+yqA3m0XwL8LYL8LoH8K\/KcA+qfAPwNf3zKAb0dCgCvhGjABAP0VwP5mXAEALt6U4eW70jI9rAAAPoBzwx8B3xV/fWjAC+Af+H9gAAh847Hw/9E4n7iN06fA286g1r19WkZf4y4DAPg856x\/D4A3L/hT4P5nAMBy3a2588s9nB39d+Bvv53x5+4jAOXmX\/19AOD3f4X+vwEAPtA5+u\/vAQCgM8pDkK5n23lO5m\/4GgBw/a5v8H7yP2X8k/hD\/\/570f8JAPD1P\/0z8P29CUAAMABgAAxAYIQAADgTfV8EAAAMAgL7jL617W0086vXnO6cAgA\/\/3Q2a\/93P7hC4JmUAYD7W9xHAPiM84C8P92u\/Q8AYO1UeFz4l1L1N0UAPt098H1xAAAW74X\/N0Pz+qO1\/v4cAP6t0H5vAACf1u4DAPoHAACgYt8qAAAAAElFTkSuQmCC" alt="Toure Diamond" class="w-8 h-8 object-contain pokemon-sprite">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-emerald-400 leading-none">Toure Diamond</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-baseball text-[7px] text-orange-400"></i> Trainer
-                            </span>
-                        </div>
-                    </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Padventures</h1>
+                    <p class="text-xs text-rose-400 font-medium tracking-wide">Pokemons Para Venda</p>
                 </div>
             </div>
 
-            <!-- Direita: Botões Alinhados -->
-            <div class="flex items-center gap-2 shrink-0">
-                <button onclick="requestAdminAuth(() => openAutoModal())" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="requestAdminAuth(() => openAutoModal())" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Importação Automática
                 </button>
-                <button onclick="requestAdminAuth(() => openAddModal())" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer whitespace-nowrap">
+                <button onclick="requestAdminAuth(() => openAddModal())" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Novo Pokémon
                 </button>
-                <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 cursor-pointer whitespace-nowrap">
+                <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer">
                     <i class="fa-solid fa-download"></i> Exportar
                 </button>
-                <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 cursor-pointer whitespace-nowrap">
+                <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700 cursor-pointer">
                     <i class="fa-solid fa-upload"></i> Importar
                     <input type="file" id="importFile" accept=".json" onchange="requestAdminAuth(() => importData(event))" class="hidden">
                 </label>
-                <button onclick="requestAdminAuth(() => resetToDefault())" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-rose-900/50 cursor-pointer" title="Limpar Nuvem">
+                <button onclick="requestAdminAuth(() => resetToDefault())" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-rose-900/50 cursor-pointer" title="Limpar Nuvem">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
@@ -280,7 +240,7 @@
             </div>
             <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Raros</p>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Normais</p>
                     <h3 id="statNormal" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
@@ -301,8 +261,8 @@
                 <button onclick="setCategory('Shiny')" id="btn-cat-Shiny" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
                     Shiny
                 </button>
-                <button onclick="setCategory('Raros')" id="btn-cat-Raros" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
-                    Raros
+                <button onclick="setCategory('Normais')" id="btn-cat-Normais" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
+                    Normais
                 </button>
             </div>
 
@@ -366,7 +326,7 @@
                         <select id="pokeCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
                             <option value="Cloneds">Cloneds</option>
                             <option value="Shiny">Shiny</option>
-                            <option value="Raros">Raros</option>
+                            <option value="Normais">Normais</option>
                         </select>
                     </div>
                     <div>
@@ -429,13 +389,13 @@
                     <select id="autoCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                         <option value="Cloneds">Cloneds</option>
                         <option value="Shiny">Shiny</option>
-                        <option value="Raros">Raros</option>
+                        <option value="Normais">Normais</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Lista de Pokémons (Um por linha)</label>
-                    <textarea id="autoTextList" rows="5" placeholder="friend ball.Cloned Parasect [130][M]Ability: Dry SkinTM: Petal BlizzardTM: Lunge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500"></textarea>
+                    <textarea id="autoTextList" rows="5" placeholder="X rocket ball. Cloned Electivire [130][F]Ability: Motor Drive TM: Reflect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -459,7 +419,7 @@
 
     <!-- Footer -->
     <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
-        Lista Oficial Pokemons House
+        Padventures • Pokemons Para Venda
     </footer>
 
     <script>
@@ -483,19 +443,19 @@
             
             if(!grid) return;
             grid.innerHTML = '';
-            let total = 0, cloned = 0, shiny = 0, raros = 0;
+            let total = 0, cloned = 0, shiny = 0, normal = 0;
             let displayedCount = 0;
 
             Object.keys(window.currentData).forEach(cat => {
-                const count = (window.currentData[cat] || []).length;
+                const count = window.currentData[cat].length;
                 total += count;
                 if (cat === 'Cloneds') cloned += count;
                 if (cat === 'Shiny') shiny += count;
-                if (cat === 'Raros') raros += count;
+                if (cat === 'Normais') normal += count;
 
                 if (window.currentCategory !== 'all' && window.currentCategory !== cat) return;
 
-                (window.currentData[cat] || []).forEach((pokemonObj, index) => {
+                window.currentData[cat].forEach((pokemonObj, index) => {
                     const title = pokemonObj.title || "";
                     const ability = pokemonObj.ability || "";
                     const details = pokemonObj.details || "";
@@ -560,7 +520,7 @@
             if(statTotal) statTotal.innerText = total;
             if(statCloned) statCloned.innerText = cloned;
             if(statShiny) statShiny.innerText = shiny;
-            if(statNormal) statNormal.innerText = raros;
+            if(statNormal) statNormal.innerText = normal;
 
             if (displayedCount === 0) {
                 if(emptyState) {
@@ -751,17 +711,18 @@
             });
         }
 
-        function cleanStringForMatch(text) {
-            return text.toLowerCase()
+        // Função de utilidade para extrair o nome exato da espécie (ex: 'kingler', 'farfetchd', 'ninetales')
+        function extractSpeciesName(text) {
+            let clean = text.toLowerCase()
                 .replace(/^x\s+/i, '')
-                .replace(/\[.*?\]/g, '')
-                .replace(/\"/g, '')
-                .replace(/position:.*/i, '')
+                .replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '')
+                .replace(/\[.*?\]/g, '') // remove [130], [F], [M]
+                .replace(/position:.*/i, '') // remove coordenadas Position: {x...}
                 .replace(/ability:.*/i, '')
-                .replace(/items:.*/i, '')
                 .replace(/tm:.*/i, '')
-                .replace(/\{.*?\}/g, '')
+                .replace(/^(cloned|clone|shiny)\s+/i, '')
                 .replace(/[^a-z0-9]/g, '');
+            return clean.trim();
         }
 
         window.processBatchImport = async function() {
@@ -782,26 +743,22 @@
             }
 
             try {
-                const ballList = [];
+                const ballMap = {};
                 for (let file of ballFiles) {
                     const base64 = await toBase64(file);
-                    const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
-                    const cleanName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    ballList.push({
-                        rawName: rawName,
-                        cleanName: cleanName,
-                        base64: base64
-                    });
+                    const cleanName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase().replace(/[^a-z0-9]/g, '');
+                    ballMap[cleanName] = base64;
                 }
 
+                // Mapeia todas as imagens de Pokémons carregadas
                 const spriteList = [];
                 for (let file of spriteFiles) {
                     const base64 = await toBase64(file);
                     const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
-                    const cleanKey = cleanStringForMatch(rawName);
+                    const cleanSpecies = extractSpeciesName(rawName);
                     spriteList.push({
                         rawName: rawName.toLowerCase(),
-                        cleanKey: cleanKey,
+                        cleanSpecies: cleanSpecies,
                         base64: base64
                     });
                 }
@@ -813,75 +770,67 @@
                     line = line.trim();
                     if (!line) continue;
 
-                    let ballName = "POKEBALL";
-                    let foundBall = "";
                     let title = line;
-
-                    const pokeNameMatch = line.match(/(Cloned|Shiny|[A-Z][a-z]+)\s+/i);
-                    
-                    if (pokeNameMatch && pokeNameMatch.index > 0) {
-                        let extractedBallText = line.substring(0, pokeNameMatch.index).trim();
-                        extractedBallText = extractedBallText.replace(/^x\s+/i, '').replace(/[\.\s]+$/, '');
-
-                        if (extractedBallText) {
-                            let displayBall = extractedBallText.toUpperCase().replace('POKEBALL', 'BALL');
-                            if (!displayBall.includes('BALL')) displayBall += ' BALL';
-                            ballName = displayBall;
-
-                            title = line.substring(pokeNameMatch.index).trim();
-
-                            const cleanExtracted = extractedBallText.toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const firstWord = cleanExtracted.replace(/ball|pokeball/g, '');
-
-                            let matchBall = ballList.find(b => b.cleanName === cleanExtracted);
-                            if (!matchBall && firstWord.length >= 3) {
-                                matchBall = ballList.find(b => b.cleanName.includes(firstWord));
-                            }
-
-                            if (matchBall) {
-                                foundBall = matchBall.base64;
-                            }
-                        }
-                    }
-
                     let ability = "";
                     let details = "";
+                    let ballName = "POKEBALL";
+                    let detectedBallKeys = [];
+
+                    let cleanLine = line.replace(/^([a-z\s]+)\./i, '$1 ');
+                    const lowerLine = cleanLine.toLowerCase();
+
+                    if (lowerLine.includes('yellow pokeball')) { ballName = 'YELLOW POKEBALL'; detectedBallKeys = ['yellow', 'poke']; }
+                    else if (lowerLine.includes('rocket')) { ballName = 'ROCKET BALL'; detectedBallKeys = ['rocket', 'rock']; }
+                    else if (lowerLine.includes('aqua')) { ballName = 'AQUA POKEBALL'; detectedBallKeys = ['aqua']; }
+                    else if (lowerLine.includes('moon')) { ballName = 'MOON BALL'; detectedBallKeys = ['moon']; }
+                    else if (lowerLine.includes('heavy')) { ballName = 'HEAVY BALL'; detectedBallKeys = ['heavy']; }
+                    else if (lowerLine.includes('premier')) { ballName = 'PREMIER BALL'; detectedBallKeys = ['premier']; }
+                    else if (lowerLine.includes('ultra')) { ballName = 'ULTRA BALL'; detectedBallKeys = ['ultra']; }
+                    else if (lowerLine.includes('great')) { ballName = 'GREAT BALL'; detectedBallKeys = ['great']; }
+                    else if (lowerLine.includes('master')) { ballName = 'MASTER BALL'; detectedBallKeys = ['master']; }
+                    else if (lowerLine.includes('repeat')) { ballName = 'REPEAT BALL'; detectedBallKeys = ['repeat']; }
+                    else { ballName = 'POKEBALL'; detectedBallKeys = ['poke', 'normal']; }
+
+                    title = cleanLine.replace(/^(ultra ball|repeat ball|yellow pokeball|rocket ball|aqua ball|moon ball|heavy ball|premier ball|great ball|master ball|friend ball)\.?\s*/i, '');
 
                     if (title.includes("Ability:")) {
                         const parts = title.split("Ability:");
                         title = parts[0].trim();
                         const rest = parts[1].trim();
+                        const restParts = rest.split(/TM:|Items:|Position:/i);
+                        ability = "Ability: " + restParts[0].trim();
+                        if (restParts.length > 1) {
+                            details = restParts.slice(1).map(tm => tm.trim()).filter(tm => tm).join('\n');
+                        }
+                    }
 
-                        let formattedRest = rest.replace(/TM:\s*/g, '\nTM: ')
-                                                .replace(/Items:\s*/g, '\nItems: ')
-                                                .replace(/Position:.*/gi, '');
+                    // Extrai a espécie do título (ex: 'kingler', 'farfetchd', 'ninetales')
+                    const targetSpecies = extractSpeciesName(title);
+                    let foundSprite = "";
 
-                        const linesRest = formattedRest.split('\n').map(l => l.trim()).filter(l => l);
-                        
-                        if (linesRest.length > 0) {
-                            ability = "Ability: " + linesRest[0].replace(/^Ability:\s*/i, '');
-                            if (linesRest.length > 1) {
-                                details = linesRest.slice(1)
-                                    .map(l => l.replace(/\{.*?\}/g, '').trim())
-                                    .filter(l => l)
-                                    .join('\n');
+                    if (targetSpecies.length > 0) {
+                        // 1. Tenta correspondência exata de espécie
+                        let match = spriteList.find(s => s.cleanSpecies === targetSpecies);
+                        if (match) {
+                            foundSprite = match.base64;
+                        } else {
+                            // 2. Tenta encontrar se o nome limpo da imagem está contido dentro do título
+                            match = spriteList.find(s => s.cleanSpecies.length >= 3 && targetSpecies.includes(s.cleanSpecies));
+                            if (match) {
+                                foundSprite = match.base64;
                             }
                         }
                     }
 
-                    details = details.replace(/\{.*?\}/g, '').trim();
-
-                    const targetKey = cleanStringForMatch(title);
-                    let foundSprite = "";
-
-                    if (targetKey.length > 0) {
-                        let match = spriteList.find(s => s.cleanKey === targetKey);
-                        if (!match) {
-                            match = spriteList.find(s => s.cleanKey.length >= 3 && (targetKey.includes(s.cleanKey) || s.cleanKey.includes(targetKey)));
+                    let foundBall = "";
+                    for (let bKey of detectedBallKeys) {
+                        for (let key in ballMap) {
+                            if (key.includes(bKey)) {
+                                foundBall = ballMap[key];
+                                break;
+                            }
                         }
-                        if (match) {
-                            foundSprite = match.base64;
-                        }
+                        if (foundBall) break;
                     }
 
                     itemsToBatch.push({
