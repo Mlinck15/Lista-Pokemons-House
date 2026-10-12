@@ -12,7 +12,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // Configuração do Firebase (Mantenha a sua configuração original aqui)
         const firebaseConfig = {
             apiKey: "AIzaSyC2d-OT4XIyLG1O48gMexds4n5-MzvjAgE",
             authDomain: "pokemons-house.firebaseapp.com",
@@ -86,42 +85,111 @@
             });
         }
 
+        window.importBatchToFirebase = async function(itemsArray) {
+            try {
+                let batch = writeBatch(db);
+                let count = 0;
+                let totalSaved = 0;
+
+                for (let i = 0; i < itemsArray.length; i++) {
+                    const p = itemsArray[i];
+                    const cat = p.category || "Raros";
+                    const docId = p.id || `${cat}_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 4)}`;
+                    const ref = doc(db, COLLECTION_NAME, docId);
+                    
+                    batch.set(ref, { ...p, category: cat, id: docId });
+                    count++;
+                    totalSaved++;
+
+                    if (count === 100) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        count = 0;
+                    }
+                }
+
+                if (count > 0) {
+                    await batch.commit();
+                }
+
+                alert(`Sucesso! ${totalSaved} Pokémons gravados na nuvem.`);
+            } catch (error) {
+                console.error("Erro na importação: ", error);
+                alert("Erro ao gravar no Firebase: " + error.message);
+            }
+        };
+
+        window.saveSinglePokemonToFirebase = async function(category, pokemonObj) {
+            try {
+                const docId = pokemonObj.id || `${category}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+                const ref = doc(db, COLLECTION_NAME, docId);
+                const dataToSave = { ...pokemonObj, category: category, id: docId };
+                await setDoc(ref, dataToSave);
+            } catch (error) {
+                console.error("Erro ao salvar no Firebase: ", error);
+                alert("Erro ao salvar no Firebase: " + error.message);
+            }
+        };
+
+        window.deletePokemonFromFirebase = async function(category, index) {
+            try {
+                const item = window.currentData[category][index];
+                if (item && item.id) {
+                    await deleteDoc(doc(db, COLLECTION_NAME, item.id));
+                    alert("Pokémon excluído com sucesso!");
+                }
+            } catch (error) {
+                console.error("Erro ao excluir do Firebase: ", error);
+                alert("Erro ao excluir: " + error.message);
+            }
+        };
+
+        window.clearFirebaseData = async function() {
+            try {
+                const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+                let batch = writeBatch(db);
+                let count = 0;
+                snapshot.forEach((docSnap) => {
+                    batch.delete(docSnap.ref);
+                    count++;
+                });
+                if (count > 0) await batch.commit();
+                alert("Base de dados limpa com sucesso!");
+            } catch (error) {
+                console.error("Erro ao limpar nuvem: ", error);
+            }
+        };
+
         listenToFirebase();
     </script>
 
     <style>
-        /* Estilo para Pixel Art nítida */
         .pokemon-sprite {
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
 
-        /* Animação da Aura tipo Dragon Ball */
-        @keyframes dbzAura {
-            0% { box-shadow: 0 0 10px 2px rgba(52, 211, 153, 0.6), 0 0 20px 4px rgba(52, 211, 153, 0.4); }
-            50% { box-shadow: 0 0 25px 8px rgba(52, 211, 153, 0.9), 0 0 40px 12px rgba(52, 211, 153, 0.7); }
-            100% { box-shadow: 0 0 10px 2px rgba(52, 211, 153, 0.6), 0 0 20px 4px rgba(52, 211, 153, 0.4); }
+        /* Animações de Aura Dragon Ball */
+        @keyframes dbzAuraGreen {
+            0% { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.5), inset 0 0 6px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 18px 5px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(16, 185, 129, 0.5); }
+            100% { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.5), inset 0 0 6px rgba(16, 185, 129, 0.3); }
         }
 
         @keyframes dbzAuraRose {
-            0% { box-shadow: 0 0 10px 2px rgba(244, 63, 94, 0.6), 0 0 20px 4px rgba(244, 63, 94, 0.4); }
-            50% { box-shadow: 0 0 25px 8px rgba(244, 63, 94, 0.9), 0 0 40px 12px rgba(244, 63, 94, 0.7); }
-            100% { box-shadow: 0 0 10px 2px rgba(244, 63, 94, 0.6), 0 0 20px 4px rgba(244, 63, 94, 0.4); }
+            0% { box-shadow: 0 0 8px 2px rgba(244, 63, 94, 0.5), inset 0 0 6px rgba(244, 63, 94, 0.3); }
+            50% { box-shadow: 0 0 18px 5px rgba(244, 63, 94, 0.8), inset 0 0 10px rgba(244, 63, 94, 0.5); }
+            100% { box-shadow: 0 0 8px 2px rgba(244, 63, 94, 0.5), inset 0 0 6px rgba(244, 63, 94, 0.3); }
         }
 
-        /* Classe que aplica a aura */
-        .aura-effect {
-            position: relative;
-            border-radius: 9999px; /* Mantém a aura redonda */
-            animation: dbzAura 1.5s infinite ease-in-out;
-            border: 2px solid rgba(52, 211, 153, 0.8); /* Borda brilhante básica */
+        .aura-green {
+            animation: dbzAuraGreen 1.6s infinite ease-in-out;
+            border: 1px solid rgba(16, 185, 129, 0.7);
         }
 
-        .aura-effect-rose {
-            position: relative;
-            border-radius: 9999px;
-            animation: dbzAuraRose 1.5s infinite ease-in-out;
-            border: 2px solid rgba(244, 63, 94, 0.8);
+        .aura-rose {
+            animation: dbzAuraRose 1.6s infinite ease-in-out;
+            border: 1px solid rgba(244, 63, 94, 0.7);
         }
     </style>
 </head>
@@ -131,7 +199,7 @@
     <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
         <div class="max-w-[1500px] mx-auto px-4 py-3 flex flex-wrap xl:flex-nowrap justify-between items-center gap-4">
             
-            <!-- Esquerda: Título + Treinadores -->
+            <!-- Esquerda: Título + Treinadores com Aura DBZ -->
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/20 text-white shrink-0">
@@ -142,14 +210,12 @@
                     </h1>
                 </div>
 
-                <!-- Treinadores com efeito de Aura -->
-                <div class="flex items-center gap-4 border-l border-slate-800 pl-4">
-                    
+                <!-- Treinadores -->
+                <div class="flex items-center gap-2 border-l border-slate-800 pl-4">
                     <!-- Dragon Pink -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 shadow-inner">
-                        <div class="w-10 h-10 rounded-full overflow-hidden p-0.5 aura-effect-rose bg-black flex items-center justify-center">
-                            <!-- Link Corrigido: ./ procura na mesma pasta do index.html -->
-                            <img src="./Dragon Pink.gif" alt="Dragon Pink" class="w-full h-full object-contain pokemon-sprite">
+                    <div class="flex items-center gap-2.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <div class="w-8 h-8 rounded-full aura-green bg-slate-900/90 flex items-center justify-center overflow-hidden shrink-0">
+                            <img src="./Dragon Pink.gif" alt="Dragon Pink" class="w-full h-full object-contain pokemon-sprite scale-125">
                         </div>
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-emerald-400 leading-none">Dragon Pink</span>
@@ -160,9 +226,9 @@
                     </div>
 
                     <!-- Doomsday -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 shadow-inner">
-                        <div class="w-10 h-10 rounded-full overflow-hidden p-0.5 aura-effect bg-black flex items-center justify-center">
-                            <img src="./Doomsday.gif" alt="Doomsday" class="w-full h-full object-contain pokemon-sprite">
+                    <div class="flex items-center gap-2.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <div class="w-8 h-8 rounded-full aura-rose bg-slate-900/90 flex items-center justify-center overflow-hidden shrink-0">
+                            <img src="./Doomsday.gif" alt="Doomsday" class="w-full h-full object-contain pokemon-sprite scale-125">
                         </div>
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-rose-500 leading-none">Doomsday</span>
@@ -173,9 +239,9 @@
                     </div>
 
                     <!-- Toure Diamond -->
-                    <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 shadow-inner">
-                        <div class="w-10 h-10 rounded-full overflow-hidden p-0.5 aura-effect bg-black flex items-center justify-center">
-                            <img src="./Toure Diamond.gif" alt="Toure Diamond" class="w-full h-full object-contain pokemon-sprite">
+                    <div class="flex items-center gap-2.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <div class="w-8 h-8 rounded-full aura-green bg-slate-900/90 flex items-center justify-center overflow-hidden shrink-0">
+                            <img src="./Toure Diamond.gif" alt="Toure Diamond" class="w-full h-full object-contain pokemon-sprite scale-125">
                         </div>
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-emerald-400 leading-none">Toure Diamond</span>
@@ -187,7 +253,7 @@
                 </div>
             </div>
 
-            <!-- Direita: Botões (Mantidos os originais) -->
+            <!-- Direita: Botões -->
             <div class="flex items-center gap-2 shrink-0">
                 <button onclick="requestAdminAuth(() => openAutoModal())" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer whitespace-nowrap">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Importação Automática
@@ -209,13 +275,667 @@
         </div>
     </header>
 
-    <!-- Main Content (Mantenha o resto do seu ficheiro igual daqui para baixo) -->
+    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
-        <!-- ... resto do conteúdo ... -->
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Registros</p>
+                    <h3 id="statTotal" class="text-2xl font-bold text-white mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Cloneds</p>
+                    <h3 id="statCloned" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+                    <i class="fa-solid fa-dna"></i>
+                </div>
+            </div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Shinies</p>
+                    <h3 id="statShiny" class="text-2xl font-bold text-yellow-400 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/10 text-yellow-400 flex items-center justify-center border border-yellow-500/20">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+            </div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Raros</p>
+                    <h3 id="statNormal" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                    <i class="fa-solid fa-shield"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <button onclick="setCategory('all')" id="btn-cat-all" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-rose-600 text-white shadow-md shadow-rose-600/20 cursor-pointer">
+                    Todos
+                </button>
+                <button onclick="setCategory('Cloneds')" id="btn-cat-Cloneds" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
+                    Cloneds
+                </button>
+                <button onclick="setCategory('Shiny')" id="btn-cat-Shiny" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
+                    Shiny
+                </button>
+                <button onclick="setCategory('Raros')" id="btn-cat-Raros" class="category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer">
+                    Raros
+                </button>
+            </div>
+
+            <div class="relative w-full md:w-80">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-search"></i>
+                </span>
+                <input type="text" id="searchInput" oninput="renderList()" placeholder="Buscar por nome, habilidade..." class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500 transition">
+            </div>
+        </div>
+
+        <!-- Pokémon List Grid -->
+        <div id="pokemonGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center p-12 text-center bg-slate-900/40 border border-slate-800/80 rounded-xl">
+            <div class="w-16 h-16 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center text-2xl mb-4">
+                <i class="fa-solid fa-ghost"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Nenhum Pokémon encontrado</h3>
+            <p class="text-sm text-slate-400 mt-1">Clique em "Importar" para enviar seu arquivo para a nuvem.</p>
+        </div>
+
     </main>
 
-    <!-- Modais (Mantenha os seus modais originais aqui) -->
-    <!-- ... -->
+    <!-- Modal de Autenticação / Senha Segura -->
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-rose-500">
+                <i class="fa-solid fa-lock text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Acesso Restrito</h3>
+            </div>
+            <p class="text-xs text-slate-300">Esta ação requer a senha de administrador para continuar.</p>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Palavra-passe</label>
+                <input type="password" id="adminPasswordInput" placeholder="Digite a senha..." onkeydown="if(event.key === 'Enter') confirmAdminAuth()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+            </div>
+            <div class="flex justify-end gap-2 mt-2">
+                <button type="button" onclick="closeAuthModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-medium transition cursor-pointer">Cancelar</button>
+                <button type="button" onclick="confirmAdminAuth()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-xs font-medium transition shadow-lg shadow-rose-600/20 cursor-pointer">Confirmar</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal de Cadastro / Edição Individual -->
+    <div id="pokemonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-850">
+                <h3 id="modalTitle" class="text-lg font-bold text-white">Adicionar Novo Pokémon</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="pokemonForm" onsubmit="savePokemon(event)" class="p-6 flex flex-col gap-4">
+                <input type="hidden" id="editCategory">
+                <input type="hidden" id="editIndex">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Categoria</label>
+                        <select id="pokeCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                            <option value="Cloneds">Cloneds</option>
+                            <option value="Shiny">Shiny</option>
+                            <option value="Raros">Raros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nome / Título</label>
+                        <input type="text" id="pokeTitle" placeholder="Cloned Vaporeon [130]" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Habilidade (Ability)</label>
+                        <input type="text" id="pokeAbility" placeholder="Ability: Water Absorb" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Pokébola</label>
+                        <input type="text" id="pokeBallName" placeholder="AQUA POKEBALL" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Detalhes / TMs (um por linha)</label>
+                    <textarea id="pokeDetails" rows="3" placeholder="TM: Rain Dance" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500 font-mono"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Foto Sprite</label>
+                        <input type="file" id="pokeImgFile" accept="image/*" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Foto Ball</label>
+                        <input type="file" id="ballImgFile" accept="image/*" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">Cancelar</button>
+                    <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-lg shadow-rose-600/20 cursor-pointer">Salvar na Nuvem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Importação Automática em Massa -->
+    <div id="autoModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-850">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Importação e Vínculo em Massa</h3>
+                <button onclick="closeAutoModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Cole sua lista de nomenclaturas abaixo. O sistema fará a leitura de cada linha, identificará a pokébola correta e fará o vínculo automático das imagens de forma individual.
+                </p>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Categoria de Destino</label>
+                    <select id="autoCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="Cloneds">Cloneds</option>
+                        <option value="Shiny">Shiny</option>
+                        <option value="Raros">Raros</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Lista de Pokémons (Um por linha)</label>
+                    <textarea id="autoTextList" rows="5" placeholder="friend ball.Cloned Parasect [130][M]Ability: Dry SkinTM: Petal BlizzardTM: Lunge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-cyan-400 mb-1"><i class="fa-solid fa-dragon"></i> Fotos dos Pokémons (Sprites)</label>
+                        <input type="file" id="batchSpriteFiles" accept="image/*" multiple class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-amber-400 mb-1"><i class="fa-solid fa-baseball"></i> Fotos das Pokébolas (Balls)</label>
+                        <input type="file" id="batchBallFiles" accept="image/*" multiple class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4 pt-2 border-t border-slate-800">
+                    <button type="button" onclick="closeAutoModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">Cancelar</button>
+                    <button type="button" onclick="processBatchImport()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-lg shadow-indigo-600/20 cursor-pointer">Processar e Vincular Automaticamente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+        Lista Oficial Pokemons House
+    </footer>
+
+    <script>
+        window.setCategory = function(cat) {
+            window.currentCategory = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.className = "category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer";
+            });
+            const activeBtn = document.getElementById(`btn-cat-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "category-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-rose-600 text-white shadow-md shadow-rose-600/20 cursor-pointer";
+            }
+            window.renderList();
+        }
+
+        window.renderList = function() {
+            const grid = document.getElementById('pokemonGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+            
+            if(!grid) return;
+            grid.innerHTML = '';
+            let total = 0, cloned = 0, shiny = 0, raros = 0;
+            let displayedCount = 0;
+
+            Object.keys(window.currentData).forEach(cat => {
+                const count = (window.currentData[cat] || []).length;
+                total += count;
+                if (cat === 'Cloneds') cloned += count;
+                if (cat === 'Shiny') shiny += count;
+                if (cat === 'Raros') raros += count;
+
+                if (window.currentCategory !== 'all' && window.currentCategory !== cat) return;
+
+                (window.currentData[cat] || []).forEach((pokemonObj, index) => {
+                    const title = pokemonObj.title || "";
+                    const ability = pokemonObj.ability || "";
+                    const details = pokemonObj.details || "";
+                    const ballName = pokemonObj.ballName || "POKEBALL";
+                    
+                    const fullSearchString = `${title} ${ability} ${details} ${ballName}`.toLowerCase();
+                    if (searchTerm && !fullSearchString.includes(searchTerm)) return;
+
+                    displayedCount++;
+
+                    const spriteHtml = pokemonObj.sprite 
+                        ? `<img src="${pokemonObj.sprite}" alt="Sprite" class="w-12 h-12 object-contain pokemon-sprite">` 
+                        : `<i class="fa-solid fa-dragon text-slate-600 text-xl"></i>`;
+
+                    const ballHtml = pokemonObj.ballImg 
+                        ? `<img src="${pokemonObj.ballImg}" alt="Ball" class="w-6 h-6 object-contain mb-1 pokemon-sprite">` 
+                        : `<i class="fa-solid fa-baseball text-slate-600 text-base mb-1"></i>`;
+
+                    const formattedAbility = ability ? `<div class="text-cyan-400 font-medium">${ability}</div>` : '';
+                    const formattedDetails = details ? details.split('\n').map(line => `<div class="text-rose-400 font-medium">${line}</div>`).join('') : '';
+
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900/80 border border-slate-800 hover:border-slate-700 rounded-xl p-4 flex flex-col justify-between gap-4 transition shadow-md";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700">${cat}</span>
+                            
+                            <div class="w-16 h-16 bg-slate-950/80 border border-slate-800 rounded-lg flex items-center justify-center p-1 overflow-hidden shadow-inner" title="Sprite do Pokémon">
+                                ${spriteHtml}
+                            </div>
+
+                            <div class="w-20 h-16 bg-slate-950/80 border border-slate-800 rounded-lg flex flex-col items-center justify-center p-1 shadow-inner text-center" title="${ballName}">
+                                ${ballHtml}
+                                <span class="text-[9px] uppercase tracking-tighter text-slate-400 font-bold truncate max-w-full px-1">${ballName}</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800/60 text-center flex flex-col gap-1 shadow-inner font-mono text-sm">
+                            <div class="font-bold text-white">${title}</div>
+                            ${formattedAbility}
+                            ${formattedDetails}
+                        </div>
+                        
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                            <button onclick="requestAdminAuth(() => openEditModal('${cat}', ${index}))" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-slate-700 cursor-pointer">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                            </button>
+                            <button onclick="requestAdminAuth(() => deletePokemon('${cat}', ${index}))" class="flex-1 bg-rose-950/30 hover:bg-rose-900/50 text-rose-400 py-1.5 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 border border-rose-900/40 cursor-pointer">
+                                <i class="fa-solid fa-trash-can"></i> Vender/Excluir
+                            </button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
+
+            const statTotal = document.getElementById('statTotal');
+            const statCloned = document.getElementById('statCloned');
+            const statShiny = document.getElementById('statShiny');
+            const statNormal = document.getElementById('statNormal');
+
+            if(statTotal) statTotal.innerText = total;
+            if(statCloned) statCloned.innerText = cloned;
+            if(statShiny) statShiny.innerText = shiny;
+            if(statNormal) statNormal.innerText = raros;
+
+            if (displayedCount === 0) {
+                if(emptyState) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                }
+            } else {
+                if(emptyState) {
+                    emptyState.classList.remove('flex');
+                    emptyState.classList.add('hidden');
+                }
+            }
+        }
+
+        window.openAddModal = function() {
+            document.getElementById('modalTitle').innerText = 'Adicionar Novo Pokémon';
+            document.getElementById('editCategory').value = '';
+            document.getElementById('editIndex').value = '';
+            document.getElementById('pokeTitle').value = '';
+            document.getElementById('pokeAbility').value = '';
+            document.getElementById('pokeDetails').value = '';
+            document.getElementById('pokeBallName').value = 'POKEBALL';
+            document.getElementById('pokeImgFile').value = '';
+            document.getElementById('ballImgFile').value = '';
+            document.getElementById('pokemonModal').classList.remove('hidden');
+        }
+
+        window.openAutoModal = function() {
+            document.getElementById('autoModal').classList.remove('hidden');
+        }
+
+        window.closeAutoModal = function() {
+            document.getElementById('autoModal').classList.add('hidden');
+        }
+
+        window.openEditModal = function(category, index) {
+            document.getElementById('modalTitle').innerText = 'Editar Pokémon';
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editIndex').value = index;
+            document.getElementById('pokeCategory').value = category;
+            
+            const item = window.currentData[category][index];
+            document.getElementById('pokeTitle').value = item.title || "";
+            document.getElementById('pokeAbility').value = item.ability || "";
+            document.getElementById('pokeDetails').value = item.details || "";
+            document.getElementById('pokeBallName').value = item.ballName || "POKEBALL";
+            
+            document.getElementById('pokeImgFile').value = '';
+            document.getElementById('ballImgFile').value = '';
+            document.getElementById('pokemonModal').classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('pokemonModal').classList.add('hidden');
+        }
+
+        window.savePokemon = function(event) {
+            event.preventDefault();
+            const category = document.getElementById('pokeCategory').value;
+            const title = document.getElementById('pokeTitle').value.trim();
+            const ability = document.getElementById('pokeAbility').value.trim();
+            const details = document.getElementById('pokeDetails').value.trim();
+            const ballName = document.getElementById('pokeBallName').value.trim().toUpperCase();
+            
+            const editCategory = document.getElementById('editCategory').value;
+            const editIndex = document.getElementById('editIndex').value;
+
+            const pokeFile = document.getElementById('pokeImgFile').files[0];
+            const ballFile = document.getElementById('ballImgFile').files[0];
+
+            let existingSprite = "";
+            let existingBallImg = "";
+            let existingId = null;
+
+            if (editCategory !== "" && editIndex !== "") {
+                const oldItem = window.currentData[editCategory][editIndex];
+                existingSprite = oldItem.sprite || "";
+                existingBallImg = oldItem.ballImg || "";
+                existingId = oldItem.id || null;
+            }
+
+            const finalizeSave = async (spriteBase64, ballBase64) => {
+                const newItem = {
+                    id: existingId,
+                    title: title,
+                    ability: ability,
+                    details: details,
+                    ballName: ballName,
+                    sprite: spriteBase64 || existingSprite,
+                    ballImg: ballBase64 || existingBallImg
+                };
+
+                await saveSinglePokemonToFirebase(category, newItem);
+                closeModal();
+            };
+
+            let processedSprite = null;
+            let processedBall = null;
+            let pending = 0;
+
+            if (pokeFile) {
+                pending++;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    processedSprite = e.target.result;
+                    if (--pending === 0) finalizeSave(processedSprite, processedBall);
+                };
+                reader.readAsDataURL(pokeFile);
+            }
+
+            if (ballFile) {
+                pending++;
+                const reader2 = new FileReader();
+                reader2.onload = function(e) {
+                    processedBall = e.target.result;
+                    if (--pending === 0) finalizeSave(processedSprite, processedBall);
+                };
+                reader2.readAsDataURL(ballFile);
+            }
+
+            if (pending === 0) {
+                finalizeSave(null, null);
+            }
+        }
+
+        window.deletePokemon = async function(category, index) {
+            await deletePokemonFromFirebase(category, index);
+        }
+
+        window.exportData = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.currentData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "TradePokesOficial.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        window.importData = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && typeof parsed === 'object') {
+                        let flatArray = [];
+                        if (Array.isArray(parsed)) {
+                            flatArray = parsed;
+                        } else {
+                            for(let cat of Object.keys(parsed)) {
+                                if(Array.isArray(parsed[cat])) {
+                                    parsed[cat].forEach(item => {
+                                        flatArray.push({ ...item, category: cat });
+                                    });
+                                }
+                            }
+                        }
+
+                        if (flatArray.length === 0) {
+                            alert("Nenhum registro válido encontrado.");
+                            return;
+                        }
+
+                        await importBatchToFirebase(flatArray);
+                    } else {
+                        alert("Arquivo JSON inválido.");
+                    }
+                } catch (err) {
+                    alert("Erro ao ler o arquivo JSON: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        window.resetToDefault = async function() {
+            await clearFirebaseData();
+        }
+
+        window.toBase64 = function(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function cleanStringForMatch(text) {
+            return text.toLowerCase()
+                .replace(/^x\s+/i, '')
+                .replace(/\[.*?\]/g, '')
+                .replace(/\"/g, '')
+                .replace(/position:.*/i, '')
+                .replace(/ability:.*/i, '')
+                .replace(/items:.*/i, '')
+                .replace(/tm:.*/i, '')
+                .replace(/\{.*?\}/g, '')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        window.processBatchImport = async function() {
+            const category = document.getElementById('autoCategory').value;
+            const rawText = document.getElementById('autoTextList').value.trim();
+            const spriteFiles = document.getElementById('batchSpriteFiles').files;
+            const ballFiles = document.getElementById('batchBallFiles').files;
+
+            if (!rawText) {
+                alert("Por favor, insira a lista de nomenclaturas.");
+                return;
+            }
+
+            const btnProcess = document.querySelector("#autoModal button[onclick='processBatchImport()']");
+            if(btnProcess) {
+                btnProcess.disabled = true;
+                btnProcess.innerText = "A processar imagens...";
+            }
+
+            try {
+                const ballList = [];
+                for (let file of ballFiles) {
+                    const base64 = await toBase64(file);
+                    const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
+                    const cleanName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    ballList.push({
+                        rawName: rawName,
+                        cleanName: cleanName,
+                        base64: base64
+                    });
+                }
+
+                const spriteList = [];
+                for (let file of spriteFiles) {
+                    const base64 = await toBase64(file);
+                    const rawName = file.name.substring(0, file.name.lastIndexOf('.'));
+                    const cleanKey = cleanStringForMatch(rawName);
+                    spriteList.push({
+                        rawName: rawName.toLowerCase(),
+                        cleanKey: cleanKey,
+                        base64: base64
+                    });
+                }
+
+                const lines = rawText.split('\n');
+                let itemsToBatch = [];
+
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+
+                    let ballName = "POKEBALL";
+                    let foundBall = "";
+                    let title = line;
+
+                    const pokeNameMatch = line.match(/(Cloned|Shiny|[A-Z][a-z]+)\s+/i);
+                    
+                    if (pokeNameMatch && pokeNameMatch.index > 0) {
+                        let extractedBallText = line.substring(0, pokeNameMatch.index).trim();
+                        extractedBallText = extractedBallText.replace(/^x\s+/i, '').replace(/[\.\s]+$/, '');
+
+                        if (extractedBallText) {
+                            let displayBall = extractedBallText.toUpperCase().replace('POKEBALL', 'BALL');
+                            if (!displayBall.includes('BALL')) displayBall += ' BALL';
+                            ballName = displayBall;
+
+                            title = line.substring(pokeNameMatch.index).trim();
+
+                            const cleanExtracted = extractedBallText.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const firstWord = cleanExtracted.replace(/ball|pokeball/g, '');
+
+                            let matchBall = ballList.find(b => b.cleanName === cleanExtracted);
+                            if (!matchBall && firstWord.length >= 3) {
+                                matchBall = ballList.find(b => b.cleanName.includes(firstWord));
+                            }
+
+                            if (matchBall) {
+                                foundBall = matchBall.base64;
+                            }
+                        }
+                    }
+
+                    let ability = "";
+                    let details = "";
+
+                    if (title.includes("Ability:")) {
+                        const parts = title.split("Ability:");
+                        title = parts[0].trim();
+                        const rest = parts[1].trim();
+
+                        let formattedRest = rest.replace(/TM:\s*/g, '\nTM: ')
+                                                .replace(/Items:\s*/g, '\nItems: ')
+                                                .replace(/Position:.*/gi, '');
+
+                        const linesRest = formattedRest.split('\n').map(l => l.trim()).filter(l => l);
+                        
+                        if (linesRest.length > 0) {
+                            ability = "Ability: " + linesRest[0].replace(/^Ability:\s*/i, '');
+                            if (linesRest.length > 1) {
+                                details = linesRest.slice(1)
+                                    .map(l => l.replace(/\{.*?\}/g, '').trim())
+                                    .filter(l => l)
+                                    .join('\n');
+                            }
+                        }
+                    }
+
+                    details = details.replace(/\{.*?\}/g, '').trim();
+
+                    const targetKey = cleanStringForMatch(title);
+                    let foundSprite = "";
+
+                    if (targetKey.length > 0) {
+                        let match = spriteList.find(s => s.cleanKey === targetKey);
+                        if (!match) {
+                            match = spriteList.find(s => s.cleanKey.length >= 3 && (targetKey.includes(s.cleanKey) || s.cleanKey.includes(targetKey)));
+                        }
+                        if (match) {
+                            foundSprite = match.base64;
+                        }
+                    }
+
+                    itemsToBatch.push({
+                        category: category,
+                        title: title,
+                        ability: ability,
+                        details: details,
+                        ballName: ballName,
+                        sprite: foundSprite,
+                        ballImg: foundBall
+                    });
+                }
+
+                await importBatchToFirebase(itemsToBatch);
+                closeAutoModal();
+            } catch (error) {
+                console.error("Erro na importação em massa: ", error);
+                alert("Ocorreu um erro ao processar os ficheiros: " + error.message);
+            } finally {
+                if(btnProcess) {
+                    btnProcess.disabled = false;
+                    btnProcess.innerText = "Processar e Vincular Automaticamente";
+                }
+            }
+        };
+    </script>
 </body>
 </html>
