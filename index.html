@@ -175,46 +175,56 @@
     <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/20 text-white">
                         <i class="fa-solid fa-baseball text-xl"></i>
                     </div>
-                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent whitespace-nowrap">
                         Lista Oficial Pokemons House
                     </h1>
                 </div>
 
-                <!-- Treinadores / Imagens do Header -->
-                <div class="flex items-center gap-2 border-l border-slate-800 pl-4">
+                <!-- Treinadores no Header -->
+                <div class="flex items-center gap-2 sm:border-l border-slate-800 sm:pl-4 flex-wrap">
                     <!-- Dragon Pink -->
-                    <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800/80">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA_SURBVGhD7cExAQAADACg969tL3gYmIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAtwf6BQEBBt4jBwAAAABJRU5ErkJggg==" alt="Dragon Pink" class="w-7 h-7 object-contain pokemon-sprite" id="imgDragonPink">
+                    <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                        <div class="w-7 h-7 rounded bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-800">
+                            <i class="fa-solid fa-user-ninja text-emerald-400 text-xs" id="iconDragonPink"></i>
+                            <img id="imgDragonPink" class="w-full h-full object-contain pokemon-sprite hidden">
+                        </div>
                         <div class="flex flex-col">
-                            <span class="text-xs font-bold text-emerald-500 leading-tight">Dragon Pink</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1">
+                            <span class="text-xs font-bold text-emerald-400 leading-none">Dragon Pink</span>
+                            <span class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <i class="fa-solid fa-baseball text-[8px] text-orange-400"></i> Trainer
                             </span>
                         </div>
                     </div>
 
                     <!-- Doomsday -->
-                    <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800/80">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA_SURBVGhD7cExAQAADACg969tL3gYmIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAtwf6BQEBBt4jBwAAAABJRU5ErkJggg==" alt="Doomsday" class="w-7 h-7 object-contain pokemon-sprite" id="imgDoomsday">
+                    <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                        <div class="w-7 h-7 rounded bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-800">
+                            <i class="fa-solid fa-user-ninja text-rose-500 text-xs" id="iconDoomsday"></i>
+                            <img id="imgDoomsday" class="w-full h-full object-contain pokemon-sprite hidden">
+                        </div>
                         <div class="flex flex-col">
-                            <span class="text-xs font-bold text-rose-500 leading-tight">Doomsday</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1">
+                            <span class="text-xs font-bold text-rose-500 leading-none">Doomsday</span>
+                            <span class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <i class="fa-solid fa-baseball text-[8px] text-orange-400"></i> Trainer
                             </span>
                         </div>
                     </div>
 
                     <!-- Toure Diamond -->
-                    <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800/80">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA_SURBVGhD7cExAQAADACg969tL3gYmIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAtwf6BQEBBt4jBwAAAABJRU5ErkJggg==" alt="Toure Diamond" class="w-7 h-7 object-contain pokemon-sprite" id="imgToureDiamond">
+                    <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                        <div class="w-7 h-7 rounded bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-800">
+                            <i class="fa-solid fa-user-ninja text-emerald-400 text-xs" id="iconToureDiamond"></i>
+                            <img id="imgToureDiamond" class="w-full h-full object-contain pokemon-sprite hidden">
+                        </div>
                         <div class="flex flex-col">
-                            <span class="text-xs font-bold text-emerald-500 leading-tight">Toure Diamond</span>
-                            <span class="text-[9px] text-slate-400 flex items-center gap-1">
+                            <span class="text-xs font-bold text-emerald-400 leading-none">Toure Diamond</span>
+                            <span class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <i class="fa-solid fa-baseball text-[8px] text-orange-400"></i> Trainer
                             </span>
                         </div>
